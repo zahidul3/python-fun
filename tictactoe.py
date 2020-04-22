@@ -1,10 +1,11 @@
 import sys
+import random
 
 winner = None
-player1 = None
-player2 = None
+player1_marker = None
+player2_marker = None
 currentPlayer = None
-test_board = [' ']*10
+the_board = ['#','1','2','3','4','5','6','7','8','9']
 my_dict = {'Player 1':'X', 'Player 2':'O'}
 
 # function to return key for any value 
@@ -16,10 +17,11 @@ def get_key(val):
     return "key doesn't exist"
 
 def player_input():
+	global my_dict
 	player_input = input("Player 1, Enter X or O:")
 	
-	if(player_input == 'X' or player_input == 'O'):
-		if(player_input == 'X'):
+	if(player_input.lower() == 'x' or player_input.lower() == 'o'):
+		if(player_input.lower() == 'x'):
 			my_dict['Player 1'] = 'X'
 			my_dict['Player 2'] = 'O'
 		else:
@@ -28,30 +30,58 @@ def player_input():
 
 	return (my_dict['Player 1'], my_dict['Player 2'])
 
+def space_valid(board, position):
+	if position not in range(1,10,1):
+		print(f"Invalid input:{position}, enter correct number")
+		return False
+	elif (board[position] != ' '):
+		print("Invalid input, enter another number")
+		return False
+	else:
+		return True
+
 def display_board(board):
 	print(board[7]+'|'+board[8]+'|'+board[9])
 	print(board[4]+'|'+board[5]+'|'+board[6])
 	print(board[1]+'|'+board[2]+'|'+board[3])	
 
-def play_game():
-	global player1
-	global player2
-	global currentPlayer
-	global test_board
+def choose_first():
+	flip = random.randint(0,1)
+	if flip == 0:
+		return 'Player 1'
+	else:
+		return 'Player 2'
 
+def player_choice(board):
+	position = 0
+	while True:
+		position = int(input(currentPlayer + ", Enter position 1 to 9:"))
+		if (space_valid(the_board,position)):
+			break
+	
+	return position
+
+def play_game():
+	global player1_marker
+	global player2_marker
+	global currentPlayer
+	global the_board
+	
+	position = 0
+	
 	#alternate players
 	if(currentPlayer == None):
-		currentPlayer = 'Player 1'
+		currentPlayer = choose_first()
 	elif(currentPlayer == 'Player 1'):
 		currentPlayer = 'Player 2'
 	else:
 		currentPlayer = 'Player 1'
 
 	#play turn
-	position = int(input(currentPlayer + ", Enter position 1 to 9:"))
-	if(position <=9 and position >=1):
-		print(get_key(my_dict[currentPlayer]) + " selected " + ascii(position))
-		test_board[position] = my_dict[currentPlayer]  
+	position = player_choice(the_board)
+
+	print(get_key(my_dict[currentPlayer]) + " selected " + ascii(position))
+	the_board[position] = my_dict[currentPlayer]  
 
 def print_winner(player=currentPlayer):
 	global currentPlayer
@@ -60,46 +90,65 @@ def print_winner(player=currentPlayer):
 	print("Winner is " +  winner)
 
 def check_winner(board, player):
-	global test_board
+	global the_board
 	global currentPlayer
 	#check horizontal 
-	if(board[1]==player and board[2]==player and board[3]==player):
-		print_winner()
-	if(board[4]==player and board[5]==player and board[6]==player):
-		print_winner()
-	if(board[7]==player and board[8]==player and board[9]==player):
-		print_winner()
+	if((board[1]==player and board[2]==player and board[3]==player) or
+	(board[4]==player and board[5]==player and board[6]==player) or
+	(board[7]==player and board[8]==player and board[9]==player) or
 	#check vertical
-	if(board[1]==player and board[4]==player and board[7]==player):
-		print_winner()
-	if(board[2]==player and board[5]==player and board[8]==player):
-		print_winner()
-	if(board[3]==player and board[6]==player and board[9]==player):
-		print_winner()
+	(board[1]==player and board[4]==player and board[7]==player) or
+	(board[2]==player and board[5]==player and board[8]==player) or
+	(board[3]==player and board[6]==player and board[9]==player) or
 	#check diagonal
-	if(board[1]==player and board[5]==player and board[9]==player):
+	(board[1]==player and board[5]==player and board[9]==player) or
+	(board[3]==player and board[5]==player and board[7]==player)):
 		print_winner()
-	if(board[3]==player and board[5]==player and board[7]==player):
-		print_winner()
+		return winner
+	else:
+		return False
+
+def check_board_full(board):
+	for i in range(1,10,1):
+		if board[i] == ' ':
+			return False
+	return True
+
+def reset_game():
+	global the_board
+	global winner
+	the_board = [' ']*10
+	winner = None
 
 def main():
-	global player1
-	global player2
+	global the_board
+	global player1_marker
+	global player2_marker
 	global winner
-
-	print("Zahid's Tic Tac Toe Game")
+	replay = True
+	board_full = False
     
-	while(winner == None):
-		if(player1 == None or player2 == None):
-			(player1, player2) = player_input()
-			print("Player 1 is " + player1)
-			print("Player 2 is " + player2)
+	print("Zahid's Tic Tac Toe Game")
+	display_board(the_board)
+	reset_game()
+
+	while(replay == True):
+		if(player1_marker == None or player2_marker == None):
+			(player1_marker, player2_marker) = player_input()
+			print("Player 1 is " + player1_marker)
+			print("Player 2 is " + player2_marker)
 
 		play_game()
-		display_board(test_board)
-		check_winner(test_board, player1)
-		check_winner(test_board, player2)
-	
+		display_board(the_board)
+		check_winner(the_board, player1_marker)
+		check_winner(the_board, player2_marker)
+		board_full = check_board_full(the_board)
+		if(board_full == True):
+			print("Cat wins!")
+			replay = False
+		if(winner == get_key('X') or winner == get_key('O')):
+			replay = False
+
 	sys.exit()
 
 if __name__ == "__main__":
